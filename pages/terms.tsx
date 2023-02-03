@@ -1,10 +1,13 @@
 import Head from "next/head"
+import { useRouter } from "next/router"
 
 import { Layout } from "@/components/layout"
 
 export default function IndexPage() {
-  const websiteURL = window.location.host
-  const siteName = "Cow Film"
+  const websiteURL = process.env.NEXT_PUBLIC_BASE_URL
+  const siteName = process.env.NEXT_PUBLIC_NAME
+  console.log(process.env)
+
   return (
     <Layout>
       <Head>
@@ -18,7 +21,7 @@ export default function IndexPage() {
       </Head>
       <section className="container grid items-center gap-6 pt-6 pb-8 md:py-10">
         <h1 className="text-lg font-bold">
-          COW FILM User Agreement / Terms and Conditions
+          {siteName} User Agreement / Terms and Conditions
         </h1>
         <p>
           Using this site means you accept its terms. Don&apos;t be put off by
