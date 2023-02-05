@@ -1,11 +1,13 @@
-import { useEffect } from "react"
+import { useContext, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/router"
 
 import FriendsList from "./friend-list"
 import { Icons } from "./icons"
+import { AuthContext } from "@/context/authContext"
 
 export function SideMenu() {
+  const { user } = useContext(AuthContext)
   const router = useRouter()
 
   function checkUrl(url) {
@@ -46,15 +48,18 @@ export function SideMenu() {
                 Browse
               </Link>
             </li>
-            {/* <li
-              className={`flex h-12 items-center border-l-4  pl-12 ${
-                checkUrl("/watchlist")
-                  ? " border-red-400"
-                  : "border-transparent"
-              }`}
-            >
-              <Link href={"/watchlist"}>Watchlist</Link>
-            </li> */}
+            {user && (
+              <li
+                className={`flex h-12 items-center border-l-4  pl-12 ${
+                  checkUrl("/watchlist")
+                    ? " border-red-400"
+                    : "border-transparent"
+                }`}
+              >
+                <Link href={"/watchlist"}>Watchlist</Link>
+              </li>
+            )}
+
             {/* <li
               className={`flex h-12 items-center border-l-4  pl-12 ${
                 checkUrl("/Coming Soon")

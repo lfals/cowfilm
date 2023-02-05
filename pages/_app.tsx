@@ -3,9 +3,7 @@ import { Inter as FontSans } from "@next/font/google"
 import { ThemeProvider } from "next-themes"
 
 import "@/styles/globals.css"
-import Head from "next/head"
-import Link from "next/link"
-import Script from "next/script"
+import { AuthProvider } from "@/context/authContext"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 
@@ -25,9 +23,11 @@ export default function App({ Component, pageProps }: AppProps) {
 					--font-sans: ${fontSans.style.fontFamily};
 				}
 			}`}</style>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <Component {...pageProps} />
-        </ThemeProvider>
+        <AuthProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <Component {...pageProps} />
+          </ThemeProvider>
+        </AuthProvider>
         <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </>

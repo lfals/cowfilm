@@ -1,18 +1,17 @@
 /* eslint-disable tailwindcss/migration-from-tailwind-2 */
-import React, { useEffect, useReducer, useState } from "react"
+import React, { useContext, useEffect, useReducer, useState } from "react"
 import Head from "next/head"
 import Link from "next/link"
+import { AuthContext } from "@/context/authContext"
 import { useQuery } from "@tanstack/react-query"
 import axios from "axios"
-import { FaChevronLeft, FaChevronRight, FaPlus } from "react-icons/fa"
+import { doc, setDoc } from "firebase/firestore"
+import { FaChevronLeft, FaChevronRight, FaEye, FaPlus } from "react-icons/fa"
 
-import { ResponseData } from "@/types/movie-detail"
+import { Movie, ResponseData } from "@/types/movie-detail"
+import { firestore } from "@/config/firebase"
 import { Layout } from "@/components/layout"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -66,6 +65,7 @@ type filterType = {
 }
 
 function Page() {
+  const { user } = useContext(AuthContext)
   const [filters, setFilter] = useReducer(
     (prev, next): filterType => {
       return { ...prev, ...next }
@@ -100,15 +100,26 @@ function Page() {
     })
   }
 
+  async function saveMovieToWatchList(movie: Movie, watched = false) {
+    await setDoc(
+      doc(firestore, "users", user.uid, "watchlist", String(movie.id)),
+      {
+        name: movie.title_english,
+        id: movie.id,
+        watched,
+        cover: movie.large_cover_image,
+      }
+    )
+  }
+
   const responseData: ResponseData = data
-  console.log(responseData)
 
   const movies = responseData?.data.movies
 
   useEffect(() => {
     const timeout = setTimeout(() => {
       refetch()
-    }, 1000)
+    }, 500)
     return () => clearTimeout(timeout)
   }, [filters])
 
@@ -117,9 +128,9 @@ function Page() {
       <>
         {Array(12)
           .fill({})
-          .map(() => {
+          .map((_, id) => {
             return (
-              <>
+              <React.Fragment key={id}>
                 <div className="a flex h-80 w-60 animate-pulse flex-col justify-between rounded-md bg-slate-300 p-6">
                   <div className="self-end">
                     {/* <Button>
@@ -130,7 +141,7 @@ function Page() {
                     <h1 className="h-4 w-full animate-pulse rounded-md bg-slate-400 text-center"></h1>
                   </div>
                 </div>
-              </>
+              </React.Fragment>
             )
           })}
       </>
@@ -168,8 +179,12 @@ function Page() {
                   <SelectValue placeholder="Genres" />
                 </SelectTrigger>
                 <SelectContent>
-                  {genres.map((genre) => {
-                    return <SelectItem value={genre}>{genre}</SelectItem>
+                  {genres.map((genre, id) => {
+                    return (
+                      <SelectItem key={id} value={genre}>
+                        {genre}
+                      </SelectItem>
+                    )
                   })}
                 </SelectContent>
               </Select>
@@ -182,9 +197,9 @@ function Page() {
                   <SelectValue placeholder="Sort By" />
                 </SelectTrigger>
                 <SelectContent>
-                  {sortOptions.map((sort) => {
+                  {sortOptions.map((sort, id) => {
                     return (
-                      <SelectItem value={sort} className="capitalize">
+                      <SelectItem key={id} value={sort} className="capitalize">
                         {sort.replace("_", " ")}
                       </SelectItem>
                     )
@@ -238,24 +253,42 @@ function Page() {
               <>
                 {movies?.map((movie) => {
                   return (
-                    <Link
-                      href={"/movie/" + movie.id}
+                    <div
+                      key={movie.id}
                       className=" flex h-80  w-60 flex-col justify-between rounded-md bg-cover capitalize "
                       style={{
                         backgroundImage: `url(${movie.large_cover_image})`,
                       }}
                     >
-                      <div className="self-end p-3">
-                        <button className="rounded-md p-3 hover:bg-black hover:bg-opacity-50">
-                          <FaPlus />
-                        </button>
+                      <div className="gap-2 self-end p-3">
+                        {user && (
+                          <>
+                            <button
+                              className="rounded-md p-3 hover:bg-black hover:bg-opacity-50"
+                              onClick={() => saveMovieToWatchList(movie, true)}
+                            >
+                              <FaEye />
+                            </button>
+                            <button
+                              className="rounded-md p-3 hover:bg-black hover:bg-opacity-50"
+                              onClick={() => saveMovieToWatchList(movie)}
+                            >
+                              <FaPlus />
+                            </button>
+                          </>
+                        )}
                       </div>
-                      <div className=" flex h-20 w-full items-end justify-end bg-gradient-to-t  from-black  pb-4 ">
-                        <h1 className="w-full  rounded-md  text-center ">
-                          {movie.title_english}
-                        </h1>
-                      </div>
-                    </Link>
+                      <Link
+                        href={"/movie/" + movie.id}
+                        className="flex h-full flex-col justify-end"
+                      >
+                        <div className=" flex h-20 w-full items-end justify-end bg-gradient-to-t  from-black  pb-4 ">
+                          <h1 className="w-full  rounded-md  text-center ">
+                            {movie.title_english}
+                          </h1>
+                        </div>
+                      </Link>
+                    </div>
                   )
                 })}
               </>
